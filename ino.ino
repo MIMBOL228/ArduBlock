@@ -1,6 +1,9 @@
 #include <Servo.h>
 #include <SPI.h>
 #include <MFRC522.h> // библиотека "RFID".
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+
 #define SS_PIN 10
 #define RST_PIN 9
 #define servo_pin 6
@@ -15,12 +18,13 @@
 #define Zumer_pin 5
 #define button_pin 2
 MFRC522 mfrc522(SS_PIN, RST_PIN);
+LiquidCrystal_I2C lcd(0x27,16,2);
+Servo servo;
 unsigned long uidDec, uidDecTemp; // для храниения номера метки в десятичном формате
 long nuc[cards];
 String nac[cards];
 bool ui;
 
-Servo servo;
 
 
  String checkCard(long uid){
@@ -43,21 +47,23 @@ Servo servo;
 
 
 void setup() {
-  
-nuc[0] = 2161025113;
-nac[0] = "Sasha";
-nuc[1] = 2161025118;
-nac[1] = "Maksim";
  Serial.begin(9600);
- Serial.println("Waiting for card...");
  SPI.begin(); // инициализация SPI / Init SPI bus.
  mfrc522.PCD_Init(); // инициализация MFRC522 / Init MFRC522 card.
+ lcd.init();
+ lcd.backlight();
  servo.attach(servo_pin);
  servo.write(0); // устанавливаем серву в закрытое сосотояние
  pinMode(Zumer_pin,OUTPUT);
  pinMode(button_pin,INPUT_PULLUP);
-  led(200,255,0);
-  analogWrite(A0,255);
+ led(200,255,0);
+ Serial.println("Waiting for card...");
+ 
+    lcd.clear();
+ lcd.setCursor(0,0);
+ lcd.print("Waiting for card");
+ lcd.setCursor(6,1);
+ lcd.print("....");
 }
 void loop() {
   ui = false;
@@ -84,11 +90,29 @@ void loop() {
 
   if(checkCard(uidDec) != ""){
     Serial.println(checkCard(uidDec));
+    
+    lcd.clear();
+ lcd.setCursor(5,0);
+ lcd.print("Hello,");
+ lcd.setCursor(0,1);
+ lcd.print(checkCard(uidDec)); 
     openh();
   }else{
+    
+    lcd.clear();
+ lcd.setCursor(5,0);
+ lcd.print("ERROR!");
+ lcd.setCursor(2,1);
+ lcd.print("Unikown card");
   led(255,0,0);
  zum(Zumer_pin,1000); // Делаем звуковой сигнал, Закрытие
   led(200,255,0);
+  
+    lcd.clear();
+ lcd.setCursor(0,0);
+ lcd.print("Waiting for card");
+ lcd.setCursor(6,1);
+ lcd.print("....");
  }
 
  
@@ -117,4 +141,10 @@ void openh(){
   led(200,255,0);
   
  servo.write(0); // устанавливаем серву в закрытое сосотояние
+ 
+    lcd.clear();
+ lcd.setCursor(0,0);
+ lcd.print("Waiting for card");
+ lcd.setCursor(6,1);
+ lcd.print("....");
 }
