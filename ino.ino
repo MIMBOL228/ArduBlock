@@ -21,6 +21,27 @@ String nac[cards];
 bool ui;
 
 Servo servo;
+
+
+ String checkCard(long uid){
+   switch (uid)
+   {
+   case 2161025113:
+     return "Sasha";
+     break;
+   
+   case 2789610488:
+     return "Maksim";
+     break;
+
+   default:
+    return "";
+     break;
+   }
+ }
+
+
+
 void setup() {
   
 nuc[0] = 2161025113;
@@ -61,13 +82,8 @@ void loop() {
  Serial.println(uidDec); // Выводим UID метки в консоль.
 
 
-  for(int h = 0;h < cards - 1;h++){
-    if(nuc[h] == id){
-      ui = true;
-      break;
-    }
-  }
-  if(ui){
+  if(checkCard(uidDec) != ""){
+    Serial.println(checkCard(uidDec));
     openh();
   }else{
   led(255,0,0);
@@ -84,9 +100,6 @@ void zum(int n,int del){
 }
 
 void led(int r,int g,int b){
-    Serial.println(r);
-    Serial.println(g);
-    Serial.println(b);
     analogWrite(rled,r);
     analogWrite(gled,g);
     analogWrite(bled,b);
