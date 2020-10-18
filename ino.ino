@@ -31,13 +31,14 @@ iarduino_RTC time(RTC_DS1302,rst,clk,dat);         // Инициилизация
 /* Создание переменных*/
  
 unsigned long uidDec, uidDecTemp;                  // для храниения номера метки в десятичном формате
-String sec;
+String sec,f;
+byte c;
 
 /* Функциии*/
  
 String checkCard(long uid){                        // Функция, возвращающая имя по ID карты
   switch (uid){                                    // Сравнивание ID, которое нам дали
-    case 2161025113:                               // ID 2161025113
+    case 3504866949:                               // ID 2161025113
       return "Sasha";                              // Возпращаем имя "Sasha"
       break;                                       // Конец
     case 2789610488:                               // ID 2789610488
@@ -49,6 +50,15 @@ String checkCard(long uid){                        // Функция, возвр
   }
 }
 
+String checkPass(byte pass){
+  if(pass == 1){
+    return "Sasha";
+  }else if(pass == 2){
+    return "Maksim";
+  }else{
+    return " ";
+  }
+}
 
 
 void setup() {                                     // Функция setup, которая выполняется первый раз при загрузке системы
@@ -65,12 +75,41 @@ void setup() {                                     // Функция setup, ко
   led(200,255,0);                                  // Устанавливаем жёлтый цвет светодиода
   wait();                                          // Включаем режим ожидания
   //time.settime(0,27,13,27,9,20,7);
+  Wire.begin();                // join i2c bus with address #4
 }
 void loop() {
-  Serial.println(time.gettime("d-m-Y, H:i:s, D")); // Выводим время (временно)
+  //Serial.println(time.gettime("d-m-Y, H:i:s, D")); // Выводим время (временно)
+   
+  Wire.requestFrom(8, 1);    // request 6 bytes from slave device #8
+  
+  while(0 < Wire.available()) // loop through all but the last
+  {
+    c = Wire.read(); // receive byte as a character
+    Serial.println(c);
+    delay(500);
+  }
+  if(c != "" && c != 0){
+    if(f == "e"){
+      close();
+      wait();  
+    }else{
+      Serial.println(c);         // print the character
+      String checkPas = checkPass(c);
+      if(checkPas != " "){                         // Если она нам хоть что-то вернула
+        open(checkPas);                                 // То, открываем
+        delay(7000);                               // И ждём 3 секунды
+      }else{                                       // Иначе
+        close();                                   // Отклоняем попытку входа
+      }
+      wait();                                      // После этого, переходим в режим ожидания
+      Serial.println(")");
+      f = "";
+    }
+  }
+  
   if(!digitalRead(button_pin)){                    // Если кнопка нажата
     open("good mood!");                            // Открываем замок, и на дисплее желаем хорошего настроения :)
-    delay(3000);                                   // Ждём..
+    delay(7000);                                   // Ждём..
     wait();                                        // После этого, переходим в режим ожидания
   }
   if (mfrc522.PICC_IsNewCardPresent()) {           // Поиск новой метки
@@ -92,7 +131,7 @@ void loop() {
 
       if(sec != " "){                                   // Если она нам вернула не не какой-то текст (каждый воцклецательный знак обозначает инвертирование)
         open(sec);                                 // То, открываем
-        delay(3000);                               // И ждём 3 секунды
+        delay(7000);                               // И ждём 3 секунды
       }else{                                       // Иначе
         close();                                   // Отклоняем попытку входа
       }
